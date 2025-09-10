@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <%- include('./partials/head') %>
+  <title><%= blog.title %></title>
+</head>
+
+<body>
+  <%- include('./partials/nav') %>
+
+  <div class="container mt-4">
+    <!-- Blog Title -->
+    <h1 class="fw-bold mb-4 text-center"><%= blog.title %></h1>
+
+    <!-- Cover Image -->
+    <% if (blog.coverImageURL) { %>
+      <div class="text-center mb-4">
+        <img src="<%= blog.coverImageURL %>" 
+             class="img-fluid rounded shadow"
+             style="max-height: 400px; object-fit: cover;" 
+             alt="Blog cover" />
+      </div>
+    <% } %>
+
+    <!-- Blog Body -->
+    <article class="p-4 bg-light rounded shadow-sm">
+      <% blog.body.split(/\n\s*\n/).forEach(paragraph => { %>
+        <p class="fs-5 lh-lg text-dark mb-4"><%= paragraph %></p>
+      <% }) %>
+    </article>
+
+    <!-- Author Info -->
+    <div class="d-flex align-items-center mt-4">
+      <img 
+        src="<%= blog.createdBy ? blog.createdBy.profileImageURL : '/images/default.png' %>"
+        alt="<%= blog.createdBy ? blog.createdBy.fullName : 'Unknown Author' %>"
+        class="rounded-circle me-2 shadow-sm"
+        style="width:50px; height:50px; object-fit:cover;" />
+      <span><%= blog.createdBy ? blog.createdBy.fullName : 'Unknown Author' %></span>
+    </div>
+
+    <!-- Comments -->
+    <div class="container mt-5 mb-5">
+      <h3 class="fw-bold mb-3">Comments (<%= comments.length %>)</h3>
+
+      <% if (locals.user) { %>
+        <form action="/blog/comment/<%= blog._id %>" method="post" class="mb-4">
+          <div class="input-group">
+            <input type="text" name="content" class="form-control" placeholder="Write a comment..." required />
+            <button class="btn btn-primary" type="submit">Add</button>
+          </div>
+        </form>
+      <% } %>
+
+      <div class="list-group">
+        <% comments.forEach(comment => { %>
+          <div class="list-group-item">
+            <div class="d-flex align-items-start">
+              <!-- User Avatar -->
+              <img 
+                src="<%= comment.createdBy ? comment.createdBy.profileImageURL : '/images/default.png' %>" 
+                alt="<%= comment.createdBy ? comment.createdBy.fullName : 'Unknown User' %>" 
+                class="rounded-circle me-3 shadow-sm"
+                style="width:40px; height:40px; object-fit:cover;" />
+
+              <!-- Comment Content -->
+              <div class="flex-grow-1">
+                <strong><%= comment.createdBy ? comment.createdBy.fullName : 'Unknown User' %></strong>
+                <p class="mb-2" id="comment-text-<%= comment._id %>"><%= comment.content %></p>
+
+                <!-- Edit/Delete BELOW comment -->
+                <% if (user && comment.createdBy && comment.createdBy._id.toString() === user._id.toString()) { %>
+                  <div class="d-flex justify-content-end gap-3 mt-2">
+                    <!-- Edit Icon toggles collapse -->
+                    <a data-bs-toggle="collapse" href="#editForm-<%= comment._id %>" role="button" title="Edit">
+                      <i class="fas fa-edit fa-sm text-warning"></i>
+                    </a>
+
+                    <!-- Delete Icon inside form -->
+                    <form action="/blog/comment/delete/<%= comment._id %>" method="POST" 
+                          onsubmit="return confirm('Delete this comment?')" style="display:inline;">
+                      <button type="submit" class="btn btn-link text-danger p-0">
+                        <i class="fas fa-trash fa-sm"></i>
+                      </button>
+                    </form>
+                  </div>
+
+                  <!-- Inline Edit Form -->
+                  <div class="collapse mt-2" id="editForm-<%= comment._id %>">
+                    <form action="/blog/comment/edit/<%= comment._id %>" method="POST">
+                      <textarea name="content" class="form-control mb-2" rows="2"><%= comment.content %></textarea>
+                      <div class="d-flex justify-content-end gap-2">
+                        <button type="submit" class="btn btn-sm btn-success">Save</button>
+                        <a data-bs-toggle="collapse" href="#editForm-<%= comment._id %>" class="btn btn-sm btn-secondary">Cancel</a>
+                      </div>
+                    </form>
+                  </div>
+                <% } %>
+              </div>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    </div>
+  </div>
+
+  <%- include('./partials/footer') %>
+  <%- include('./partials/script') %>
+</body>
+</html>
